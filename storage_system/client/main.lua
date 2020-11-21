@@ -105,9 +105,9 @@ function listen_to_server()
     print("Storage client ready!")
 
     while true do
-        local sender, msg, protocol = os.pullEvent("rednet_message")
+        local event, sender, msg, protocol = os.pullEvent("rednet_message")
 
-        print(protocol)
+        --print(protocol)
 
         handler = handlers[protocol]
         if (handler) then
@@ -119,10 +119,11 @@ function listen_to_server()
 end
 
 function handle_input_items()
-    -- while true do
-    --     sleep(2)
-    --     retrieve_input_items()
-    -- end
+    while true do
+        local event, sender, msg, protocol = os.pullEvent("rednet_message")
+
+        print(protocol)
+    end
 end
 
 rednet.open("right")
