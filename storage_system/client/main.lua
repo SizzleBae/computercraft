@@ -92,7 +92,6 @@ function msg_read_contents(sender, msg)
 end
 
 function msg_send_stack(sender, msg)
-    print("Sending stack: " .. msg)
     send_stack(msg.item, msg.count)
 end
 
@@ -103,7 +102,6 @@ handlers = {
 }
 
 function listen_to_server()
-
     while true do
         local sender, msg, protocol = rednet.receive()
 
