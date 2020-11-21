@@ -128,5 +128,4 @@ end
 
 rednet.open("right")
 refresh_stored_items()
-listen_to_server()
--- parallel.waitForAll(listen_to_server, handle_input_items)
+parallel.waitForAll(listen_to_server, handle_input_items)
