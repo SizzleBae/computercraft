@@ -44,7 +44,7 @@ function retrieve_input_items()
 
         -- Attempt to fill already existing stacks in storage
         for stored_slot, stored_item in pairs(stored_items) do
-            if stored_item.displayName == input_item.displayName and remaining_count < input_item.count then
+            if remaining_count > 0 and stored_item.displayName == input_item.displayName then
                 local remaining_space = stored_item.maxCount - stored_item.count
                 if remaining_space > 0 then
                     local moved_count = INVENTORIES[INPUT_SIDE].pushItems(STORAGE_SIDE, input_slot, remaining_space, stored_slot)
@@ -102,6 +102,8 @@ handlers = {
 }
 
 function listen_to_server()
+    print("Storage client ready!")
+
     while true do
         local sender, msg, protocol = rednet.receive()
 
@@ -123,6 +125,5 @@ end
 
 rednet.open("right")
 refresh_stored_items()
-print("Storage client ready!")
 
 parallel.waitForAll(listen_to_server, handle_input_items)
