@@ -92,7 +92,7 @@ function msg_read_contents(sender, msg)
 end
 
 function msg_send_stack(sender, msg)
-    send_stack(msg.item, msg.count)
+    send_stack(msg.slot, msg.count)
 end
 
 handlers = {
