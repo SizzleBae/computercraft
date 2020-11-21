@@ -47,6 +47,7 @@ function retrieve_input_items()
             if remaining_count > 0 and stored_item.displayName == input_item.displayName then
                 local remaining_space = stored_item.maxCount - stored_item.count
                 if remaining_space > 0 then
+                    print("ASASDSDSDSDA")
                     local moved_count = INVENTORIES[INPUT_SIDE].pushItems(STORAGE_SIDE, input_slot, remaining_space, stored_slot)
                     remaining_count = remaining_count - moved_count
 
