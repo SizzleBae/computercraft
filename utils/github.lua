@@ -1,3 +1,6 @@
+-- FROM https://pastebin.com/wPtGKMam
+-- I only removed the sleep from the main function
+
 local tArgs, gUser, gRepo, gPath, gBranch = {...}, nil, nil, "", "master"
 local usage = [[
  github <user> <repo> [path] [remote path] [branch]
@@ -134,7 +137,6 @@ function main( path )
 		downloadFile( i, data[1], data[2] )
 	end
 	writeCenter("Download completed")
-	sleep(2,5)
 	term.clear()
 	term.setCursorPos(1,1)
 end

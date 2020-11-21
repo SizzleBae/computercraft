@@ -84,7 +84,7 @@ function send_stack(slot, count)
     -- Update the storage metadata
     refresh_stored_slot(slot)
 
-    print("Sent " .. sent_count .. " " .. stored_items[slot].displayName)
+    print("Sent " .. sent_count .. " items from slot " .. slot)
 end
 
 function msg_read_contents(sender, msg)

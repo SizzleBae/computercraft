@@ -1,10 +1,15 @@
 local args = {...}
-local user_name = args[1]
-local repository_name = args[2]
-local repository_path = args[3]
+local repository_path = args[1]
+local user_name = args[2]
+local repository_name = args[3]
+
+-- Defaults
+if user_name == nil then user_name = 'SizzleBae' end
+if repository_name == nil then repository_name = 'computercraft' end
 
 -- Get the github api program
-shell.run("pastebin", "get", "wPtGKMam", "github")
+shell.run("delete", "github")
+shell.run("pastebin", "get", "yE4xG1sx", "github")
 
 startup_file = fs.open("startup", "w")
 
