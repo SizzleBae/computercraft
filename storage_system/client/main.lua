@@ -105,8 +105,9 @@ function listen_to_server()
     print("Storage client ready!")
 
     while true do
-        
-        local sender, msg, protocol = rednet.receive()
+        local sender, msg, protocol = os.pullEvent("rednet_message")
+
+        print(protocol)
 
         handler = handlers[protocol]
         if (handler) then
@@ -126,5 +127,5 @@ end
 
 rednet.open("right")
 refresh_stored_items()
-
-parallel.waitForAll(listen_to_server, handle_input_items)
+listen_to_server()
+-- parallel.waitForAll(listen_to_server, handle_input_items)
