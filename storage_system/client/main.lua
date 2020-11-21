@@ -123,4 +123,6 @@ end
 
 rednet.open("right")
 refresh_stored_items()
+print("Storage client ready!")
+
 parallel.waitForAll(listen_to_server, handle_input_items)
