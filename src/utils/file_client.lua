@@ -1,11 +1,11 @@
-tArgs = { ... }
+local tArgs = { ... }
 
-server_address = tArgs[1]
+local server_address = tArgs[1]
 if server_address == nil then server_address = "http://85.164.111.235:8000" end
-server_dir = tArgs[2]
+local server_dir = tArgs[2]
 if server_dir == nil then server_dir = "" end
 
-function split_string (inputstr, sep)
+local function split_string (inputstr, sep)
     local result={}
     for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
         table.insert(result, str)
@@ -13,13 +13,13 @@ function split_string (inputstr, sep)
     return result
 end
 
-paths_string = http.get(server_address .. "/api/list/" .. server_dir).readAll()
-paths = split_string(paths_string, ',')
+local paths_string = http.get(server_address .. "/api/list/" .. server_dir).readAll()
+local paths = split_string(paths_string, ',')
 
 for i, path in pairs(paths) do
-    file_string = http.get(server_address .. "/api/file/" .. path).readAll()
+    local file_string = http.get(server_address .. "/api/file/" .. path).readAll()
 
-    file = fs.open(path, "w")
+    local file = fs.open(path, "w")
     file.write(file_string)
     file.close()
 end
