@@ -38,4 +38,4 @@ local queue = {
     end
 }
 
-return { queue }
+return queue
