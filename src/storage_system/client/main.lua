@@ -16,7 +16,7 @@ local stored_items = {}
 
 -- Gets the items in an inventory. Returns a map of slot to item metadata
 -- This function is very expensive to run
-function get_items(inventory)
+local function get_items(inventory)
     local slots = inventory.list()
 
     local items = {}
@@ -27,17 +27,17 @@ function get_items(inventory)
 end
 
 -- Completely refreshes stored items in memory by reading chest contents
-function refresh_stored_items()
+local function refresh_stored_items()
     stored_items = get_items(INVENTORIES[STORAGE_SIDE])
 end
 
 -- Refreshes metadata in storage slot
-function refresh_stored_slot(slot)
+local function refresh_stored_slot(slot)
     stored_items[slot] = INVENTORIES[STORAGE_SIDE].getItemMeta(slot)
 end
 
 -- Retrieves all the input items in the input container
-function retrieve_input_items()
+local function retrieve_input_items()
     local input_items = get_items(INVENTORIES[INPUT_SIDE])
     for input_slot, input_item in pairs(input_items) do
 
@@ -80,7 +80,7 @@ function retrieve_input_items()
     end
 end
 
-function send_stack(slot, count)
+local function send_stack(slot, count)
     sent_count = INVENTORIES[STORAGE_SIDE].pushItems(SEND_SIDE, slot, count)
     -- Update the storage metadata
     refresh_stored_slot(slot)
@@ -88,22 +88,22 @@ function send_stack(slot, count)
     print("Sent " .. sent_count .. " items from slot " .. slot)
 end
 
-function msg_read_contents(sender, data)
+local function msg_read_contents(sender, data)
     rednet.send(sender, stored_items)
 end
 
-function msg_send_stack(sender, data)
+local function msg_send_stack(sender, data)
     send_stack(data.slot, data.count)
 end
 
-handlers = {
+local handlers = {
     read_contents = msg_read_contents,
     send_stack = msg_send_stack
 }
 
 local messages = queue.new()
 
-function handle_messages()
+local function handle_messages()
     print("Storage client ready!")
 
     while true do
@@ -112,7 +112,7 @@ function handle_messages()
 
         local message = queue.popleft(messages)
 
-        handler = handlers[message.protocol]
+        local handler = handlers[message.protocol]
         if (handler) then
             handler(message.sender, message.data)
         else
@@ -121,7 +121,7 @@ function handle_messages()
     end
 end
 
-function receive_messages()
+local function receive_messages()
     while true do
         local sender, data, protocol = rednet.receive()
 
@@ -129,7 +129,7 @@ function receive_messages()
     end
 end
 
-function handle_input_items()
+local function handle_input_items()
     while true do
         sleep(1)
         retrieve_input_items()
