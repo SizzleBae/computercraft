@@ -1,4 +1,4 @@
-local queue = require 'queue'
+local queue = require 'common.queue'
 
 -- Constants
 local INPUT_SIDE = "front"
