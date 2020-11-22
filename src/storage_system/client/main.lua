@@ -29,11 +29,17 @@ end
 -- Completely refreshes stored items in memory by reading chest contents
 local function refresh_stored_items()
     stored_items = get_items(INVENTORIES[STORAGE_SIDE])
+    
+    -- Send update to server
+    rednet.broadcast(stored_items)
 end
 
 -- Refreshes metadata in storage slot
 local function refresh_stored_slot(slot)
     stored_items[slot] = INVENTORIES[STORAGE_SIDE].getItemMeta(slot)
+    
+    -- Send update to server
+    rednet.broadcast(stored_items)
 end
 
 -- Retrieves all the input items in the input container
@@ -116,7 +122,7 @@ local function handle_messages()
         if (handler) then
             handler(message.sender, message.data)
         else
-            print("Invalid protocol: " .. message.protocol)
+            -- print("Invalid protocol: " .. message.protocol)
         end
     end
 end
