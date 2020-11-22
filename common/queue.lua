@@ -1,6 +1,6 @@
 local queue = {}
 
-function queue:new()
+function queue.new()
     return {first = 0, last = -1}
 end
 
