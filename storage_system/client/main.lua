@@ -124,7 +124,13 @@ end
 
 function receive_messages()
     while true do
-        queue.pushright(messages, rednet.receive())
+        local sender, msg, protocol = rednet.receive()
+
+        queue.pushright(messages, {
+            [1] = sender,
+            [2] = msg,
+            [3] = protocol
+        })
     end
 end
 
