@@ -88,18 +88,17 @@ function send_stack(slot, count)
     print("Sent " .. sent_count .. " items from slot " .. slot)
 end
 
-function msg_read_contents(sender, msg)
+function msg_read_contents(sender, data)
     rednet.send(sender, stored_items)
 end
 
-function msg_send_stack(sender, msg)
-    send_stack(msg.slot, msg.count)
+function msg_send_stack(sender, data)
+    send_stack(data.slot, data.count)
 end
 
 handlers = {
     read_contents = msg_read_contents,
     send_stack = msg_send_stack
-    -- send_bundle = msh_send_bundle
 }
 
 local messages = queue.new()
@@ -111,26 +110,22 @@ function handle_messages()
         -- Wait until a message is available
         while queue.length(messages) == 0 do coroutine.yield() end
 
-        local sender, msg, protocol = unpack(queue.popleft(messages))
+        local message = queue.popleft(messages)
 
-        handler = handlers[protocol]
+        handler = handlers[message.protocol]
         if (handler) then
-            handler(sender, msg)
+            handler(message.sender, message.data)
         else
-            print("Invalid protocol: " .. protocol)
+            print("Invalid protocol: " .. message.protocol)
         end
     end
 end
 
 function receive_messages()
     while true do
-        local sender, msg, protocol = rednet.receive()
+        local sender, data, protocol = rednet.receive()
 
-        queue.pushright(messages, {
-            [1] = sender,
-            [2] = msg,
-            [3] = protocol
-        })
+        queue.pushright(messages, { sender = sender, data = data, protocol = protocol })
     end
 end
 
