@@ -13,10 +13,14 @@ function split_string (inputstr, sep)
     return result
 end
 
-paths_string = http.get(server_address .. "/api/list/" .. server_dir)
+paths_string = http.get(server_address .. "/api/list/" .. server_dir).readAll()
 paths = split_string(paths_string, ',')
 
 for i, path in pairs(paths) do
-    print(path)
+    file_string = http.get(server_address .. "/api/file/" .. path).readAll()
+
+    file = fs.open(path, "w")
+    file.write(file_string)
+    file.close()
 end
 
