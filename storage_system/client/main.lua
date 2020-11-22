@@ -111,7 +111,7 @@ function handle_messages()
         -- Wait until a message is available
         while queue.length(messages) == 0 do coroutine.yield() end
 
-        local sender, msg, protocol = queue.popleft(messages)
+        local sender, msg, protocol = unpack(queue.popleft(messages))
 
         handler = handlers[protocol]
         if (handler) then
@@ -124,13 +124,7 @@ end
 
 function receive_messages()
     while true do
-        local sender, msg, protocol = rednet.receive()
-
-        queue.pushright(messages, {
-            [1] = sender,
-            [2] = msg,
-            [3] = protocol
-        })
+        queue.pushright(messages, rednet.receive())
     end
 end
 
