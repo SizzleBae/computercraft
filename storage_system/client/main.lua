@@ -1,3 +1,4 @@
+local queue = require 'queue'
 
 -- Constants
 local INPUT_SIDE = "front"
@@ -101,13 +102,16 @@ handlers = {
     -- send_bundle = msh_send_bundle
 }
 
-function listen_to_server()
+local messages = queue.new()
+
+function handle_messages()
     print("Storage client ready!")
 
     while true do
-        local event, sender, msg, protocol = os.pullEvent("rednet_message")
+        -- Wait until a message is available
+        while queue.length() == 0 do coroutine.yield() end
 
-        --print(protocol)
+        local sender, msg, protocol = queue.popleft(messages)
 
         handler = handlers[protocol]
         if (handler) then
@@ -118,14 +122,25 @@ function listen_to_server()
     end
 end
 
+function receive_messages()
+    while true do
+        local sender, msg, protocol = rednet.receive()
+
+        queue.pushright(messages, {
+            sender = sender,
+            msg = msg,
+            protocol = protocol
+        })
+    end
+end
+
 function handle_input_items()
     while true do
-        local event, sender, msg, protocol = os.pullEvent("rednet_message")
-
-        print(protocol)
+        sleep(1)
+        retrieve_input_items()
     end
 end
 
 rednet.open("right")
 refresh_stored_items()
-parallel.waitForAll(listen_to_server, handle_input_items)
+parallel.waitForAll(receive_messages, handle_messages, handle_input_items)
