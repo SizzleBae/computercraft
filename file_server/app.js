@@ -55,7 +55,7 @@ app.get('/api/list/*', (req, res) => {
     }
 
     const paths = getPathsRecursively(targetPath);
-    res.send(paths.join());
+    res.send(paths.join().replace(/\\/g, "/"));
 })
 
 app.listen(port, () => {

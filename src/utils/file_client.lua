@@ -1,7 +1,6 @@
 local tArgs = { ... }
 
 local server_address = tArgs[1]
-if server_address == nil then server_address = "http://85.164.111.235:8000" end
 local server_dir = tArgs[2]
 if server_dir == nil then server_dir = "" end
 
@@ -17,9 +16,10 @@ local paths_string = http.get(server_address .. "/api/list/" .. server_dir).read
 local paths = split_string(paths_string, ',')
 
 for i, path in pairs(paths) do
-    local file_string = http.get(server_address .. "/api/file/" .. path).readAll()
+    print(path)
+    local file_string = http.get(server_address .. "/api/file/" .. server_dir .. "/" .. path).readAll()
 
-    local file = fs.open(path, "w")
+    local file = fs.open(server_dir .. "/" .. path, "w")
     file.write(file_string)
     file.close()
 end
