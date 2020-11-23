@@ -39,51 +39,8 @@ local function refresh_stored_slot(slot)
     stored_items[slot] = INVENTORIES[STORAGE_SIDE].getItemMeta(slot)
 end
 
--- Retrieves all the input items in the input container
-local function retrieve_input_items()
-
-    local input_items = get_items(INVENTORIES[INPUT_SIDE])
-    for input_slot, input_item in pairs(input_items) do
-        local remaining_count = input_item.count
-
-        -- Attempt to fill already existing stacks in storage
-        for stored_slot, stored_item in pairs(stored_items) do
-            if remaining_count > 0 and stored_item.displayName == input_item.displayName then
-                local remaining_space = stored_item.maxCount - stored_item.count
-                if remaining_space > 0 then
-                    local moved_count = INVENTORIES[INPUT_SIDE].pushItems(STORAGE_SIDE, input_slot, remaining_space, stored_slot)
-                    remaining_count = remaining_count - moved_count
-
-                    -- Update the storage metadata
-                    refresh_stored_slot(stored_slot)
-                end
-            end
-        end
-
-        -- Check if there are any remaining items
-        -- Attempt to put remaining items into an empty slot
-        for slot_i=1, INVENTORIES[STORAGE_SIDE].size() do
-            if remaining_count > 0 and stored_items[slot_i] == nil then
-                -- This is an empty slot, put the rest in here
-                local moved_count = INVENTORIES[INPUT_SIDE].pushItems(STORAGE_SIDE, input_slot, input_item.count, slot_i)
-                remaining_count = remaining_count - moved_count
-
-                -- Update the storage metadata
-                refresh_stored_slot(slot_i)
-            end
-        end
-
-        -- Check if there are any remaining items
-        if remaining_count > 0 then
-            -- Forward remaining items
-            INVENTORIES[INPUT_SIDE].pushItems(CONTINUE_SIDE, input_slot)
-        end
-    end
-
-end
-
 local function send_stack(slot, count)
-    sent_count = INVENTORIES[STORAGE_SIDE].pushItems(SEND_SIDE, slot, count)
+    local sent_count = INVENTORIES[STORAGE_SIDE].pushItems(SEND_SIDE, slot, count)
     -- Update the storage metadata
     refresh_stored_slot(slot)
     rednet.broadcast(stored_items)
@@ -99,25 +56,40 @@ local function on_rednet_message(sender, data, protocol)
     end
 end
 
-local input_event_count = 1
+local input_dirty = true
 
 local function handle_input_items()
     while true do
-        while input_event_count == 0 do coroutine.yield() end
+        while input_dirty == false do coroutine.yield() end
+        input_dirty = false
 
-        for i = 1, 16 do
-            turtle.select(i)
-            turtle.dropUp()
+        for input_slot = 1, 16 do
+            turtle.select(input_slot)
+            -- This does not contain meta information :(
+            local input_item = turtle.getItemDetail()
+
+            if input_item ~= nil then
+                if turtle.dropDown() then
+                    -- If items were stored, update storage metadata
+                    for stored_slot = 1, INVENTORIES[STORAGE_SIDE].size() do
+                        local stored_item = stored_items[stored_slot]
+                        if stored_item == nil or stored_item.name == input_item.name then
+                            refresh_stored_slot(stored_slot)
+                        end
+                    end
+                else
+                    -- If there was no space, pass it on
+                    turtle.drop()
+                end
+            end
         end
-        retrieve_input_items()
-        rednet.broadcast(stored_items)
 
-        if input_event_count > 1 then input_event_count = 1 else input_event_count = 0 end
+        rednet.broadcast(stored_items)
     end
 end
 
 local function on_turtle_inventory()
-    input_event_count = input_event_count + 1
+    input_dirty = true
 end
 
 local event_handlers = {
