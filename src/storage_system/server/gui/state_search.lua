@@ -10,17 +10,20 @@ local function create(states, storage_handler)
         local visited = {}
         for computerID, items in pairs(storage_handler.stored_items) do
             for slot, item in pairs(items) do
-                local match = string.match(item.displayName, search_input)
+                local match = string.match(string.lower(item.displayName), string.lower(search_input))
                 if match ~= nil and visited[item.displayName] == nil then
                     table.insert(suggestions, item.displayName)
                     visited[item.displayName] = true
                 end
             end
         end
+        table.sort(suggestions)
 
         -- Make sure that selected index is not out of bounds
-        if selected_suggestion > table.getn(suggestions) then 
-            selected_suggestion = table.getn(suggestions)
+        if selected_suggestion > #suggestions then 
+            selected_suggestion = #suggestions
+        elseif selected_suggestion < 1 then
+            selected_suggestion = 1
         end
     end
     update_suggestions()
@@ -40,7 +43,7 @@ local function create(states, storage_handler)
                 set_search_input(string.sub(search_input, 1, string.len(search_input) - 1))
             elseif arg1 == 208 then
                 -- Down arrow was pressed
-                if selected_suggestion < table.getn(suggestions) then selected_suggestion = selected_suggestion + 1 end
+                if selected_suggestion < #suggestions then selected_suggestion = selected_suggestion + 1 end
             elseif arg1 == 200 then
                 -- Up arrow was pressed
                 if selected_suggestion > 1 then selected_suggestion = selected_suggestion - 1 end
@@ -77,9 +80,11 @@ local function create(states, storage_handler)
     end
 
     local function draw()
+        term.scroll(selected_suggestion)
         term.setCursorPos(2, 2)
         term.write(search_input)
         draw_suggestions(2, 4)
+
     end
 
     return {
