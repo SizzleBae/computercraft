@@ -18,6 +18,20 @@ local function create(storage_handler)
 
     local function on_event(event, arg1, arg2, arg3)
         -- print(event, arg1, arg2, arg3)
+        if event == 'key' then
+            local key = keys.getName(arg1)
+            -- If | was held down, reboot all clients and server
+            if key == 'backslash' and arg2 == true then
+                -- Restart all clients
+                for i, name in pairs(peripheral.getNames()) do
+                    local object = peripheral.wrap(name)
+                    if object.reboot then object.reboot() end
+                end
+                -- Finally, restart this server
+                shell.run("reboot")
+            end
+        end
+
         local new_state = current_state.on_event(event, arg1, arg2, arg3)
         if new_state ~= nil then current_state = new_state end
 

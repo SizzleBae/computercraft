@@ -1,10 +1,10 @@
 local queue = require '../../common/queue'
 
 -- Constants
-local INPUT_SIDE = "front"
-local STORAGE_SIDE = "back"
+local INPUT_SIDE = "top"
+local STORAGE_SIDE = "bottom"
 local SEND_SIDE = "left"
-local CONTINUE_SIDE = "top"
+local CONTINUE_SIDE = "front"
 
 local INVENTORIES = {
     [INPUT_SIDE] = peripheral.wrap(INPUT_SIDE),
@@ -29,7 +29,7 @@ end
 -- Completely refreshes stored items in memory by reading chest contents
 local function refresh_stored_items()
     stored_items = get_items(INVENTORIES[STORAGE_SIDE])
-    
+
     -- Send update to server
     rednet.broadcast(stored_items)
 end
@@ -41,7 +41,6 @@ end
 
 -- Retrieves all the input items in the input container
 local function retrieve_input_items()
-    local changed = false
 
     local input_items = get_items(INVENTORIES[INPUT_SIDE])
     for input_slot, input_item in pairs(input_items) do
@@ -79,13 +78,8 @@ local function retrieve_input_items()
             -- Forward remaining items
             INVENTORIES[INPUT_SIDE].pushItems(CONTINUE_SIDE, input_slot)
         end
-
-        changed = true
     end
 
-    if changed then
-        rednet.broadcast(stored_items)
-    end
 end
 
 local function send_stack(slot, count)
@@ -97,54 +91,61 @@ local function send_stack(slot, count)
     print("Sent " .. sent_count .. " items from slot " .. slot)
 end
 
-local function msg_read_contents(sender, data)
-    rednet.send(sender, stored_items)
+local function on_rednet_message(sender, data, protocol)
+    if protocol == 'read_contents' then
+        rednet.send(sender, stored_items)
+    elseif protocol == 'send_stack' then
+        send_stack(data.slot, data.count)
+    end
 end
 
-local function msg_send_stack(sender, data)
-    send_stack(data.slot, data.count)
-end
+local input_event_count = 1
 
-local handlers = {
-    read_contents = msg_read_contents,
-    send_stack = msg_send_stack
-}
-
-local messages = queue.new()
-
-local function handle_messages()
-    print("Storage client ready!")
-
+local function handle_input_items()
     while true do
-        -- Wait until a message is available
-        while queue.length(messages) == 0 do coroutine.yield() end
+        while input_event_count == 0 do coroutine.yield() end
 
-        local message = queue.popleft(messages)
+        for i = 1, 16 do
+            turtle.select(i)
+            turtle.dropUp()
+        end
+        retrieve_input_items()
+        rednet.broadcast(stored_items)
 
-        local handler = handlers[message.protocol]
-        if (handler) then
-            handler(message.sender, message.data)
-        else
-            -- print("Invalid protocol: " .. message.protocol)
+        if input_event_count > 1 then input_event_count = 1 else input_event_count = 0 end
+    end
+end
+
+local function on_turtle_inventory()
+    input_event_count = input_event_count + 1
+end
+
+local event_handlers = {
+    rednet_message = on_rednet_message,
+    turtle_inventory = on_turtle_inventory
+}
+local event_queue = queue.new()
+
+local function dispatch_events()
+    while true do
+        if queue.length(event_queue) == 0 then coroutine.yield() end
+
+        local event = queue.popleft(event_queue)
+        local identifier = table.remove(event, 1) -- Don't pass identifier to handler function
+        local handler = event_handlers[identifier]
+        if handler ~= nil then
+            handler(table.unpack(event))
         end
     end
 end
 
-local function receive_messages()
+local function receive_events()
     while true do
-        local sender, data, protocol = rednet.receive()
-
-        queue.pushright(messages, { sender = sender, data = data, protocol = protocol })
-    end
-end
-
-local function handle_input_items()
-    while true do
-        sleep(1)
-        retrieve_input_items()
+        local event = table.pack(os.pullEvent())
+        queue.pushright(event_queue, event)
     end
 end
 
 rednet.open("right")
 refresh_stored_items()
-parallel.waitForAll(receive_messages, handle_messages, handle_input_items)
+parallel.waitForAll(receive_events, dispatch_events, handle_input_items)
