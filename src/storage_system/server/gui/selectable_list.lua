@@ -1,25 +1,35 @@
-SelectableList = {}
+function draw(x, y, height, selected_index, length, string_supplier)
 
-function SelectableList:new(list)
-    self.list = list
-end
+    local draw_start = 1
 
-function SelectableList:draw(x, y, selected_index)
-    for i, str_element in ipairs(self.list) do
-        -- Draw selected suggetion with white background
-        if i == selected_index then
-            term.setBackgroundColor(colors.white)
-            term.setTextColor(colors.black)
-        else
-            term.setBackgroundColor(colors.black)
-            term.setTextColor(colors.white)
-        end
-        term.setCursorPos(x, y + i - 1)
-        term.write(str_element)
+    if selected_index > length - (height / 2) then
+        draw_start = length - height
+    elseif selected_index > height / 2 then
+        draw_start = math.floor(selected_index - height / 2)
     end
+
+    if draw_start < 1 then draw_start = 1 end
+
+    for i = draw_start, length do
+        if i - draw_start <= height then
+            -- Draw selected suggetion with white background
+            if i == selected_index then
+                term.setBackgroundColor(colors.white)
+                term.setTextColor(colors.black)
+            else
+                term.setBackgroundColor(colors.black)
+                term.setTextColor(colors.white)
+            end
+            term.setCursorPos(x, y + i - draw_start)
+            term.write(string_supplier(i))
+        end
+    end
+
     -- Reset colors
     term.setBackgroundColor(colors.black)
     term.setTextColor(colors.white)
 end
 
-return SelectableList
+return {
+    draw = draw
+}

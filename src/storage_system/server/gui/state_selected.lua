@@ -1,8 +1,11 @@
+local selectable_list = require 'gui.selectable_list'
+
 local FOCUS_BUNDLE = 1
 local FOCUS_STACKS = 2
 
 local function create(states, storage_handler, selected_name)
     local bundle_count = 0
+    local total_count = 0
 
     local stacks = {}
     local selected_stack = 1
@@ -11,6 +14,7 @@ local function create(states, storage_handler, selected_name)
 
     local function update_stacks()
         stacks = {}
+        total_count = 0
         for computerID, items in pairs(storage_handler.stored_items) do
             for slot, item in pairs(items) do
                 if item.displayName == selected_name then
@@ -19,6 +23,7 @@ local function create(states, storage_handler, selected_name)
                         slot = slot,
                         item = item
                     })
+                    total_count = total_count + item.count
                 end
             end
         end
@@ -40,6 +45,7 @@ local function create(states, storage_handler, selected_name)
                     local new_number = tostring(bundle_count) .. arg1
                     bundle_count = tonumber(new_number)
                 end
+                if bundle_count > total_count then bundle_count = total_count end
             end
         elseif event == 'key'then
             local key = keys.getName(arg1)
@@ -89,25 +95,12 @@ local function create(states, storage_handler, selected_name)
     end
 
     local function draw_stacks(x, y)
-        for i, stack in pairs(stacks) do
-            -- Draw selected suggetion with white background
-            if focus == FOCUS_STACKS and i == selected_stack then
-                term.setBackgroundColor(colors.white)
-                term.setTextColor(colors.black)
-            else
-                term.setBackgroundColor(colors.black)
-                term.setTextColor(colors.white)
-            end
+        local selected_index = selected_stack
+        -- Don't draw selection when focus is not on the stacks
+        if focus ~= FOCUS_STACKS then selected_index = 0 end
 
-            term.setCursorPos(x, y + i - 1)
-            term.write(stack.item.displayName)
-            term.setCursorPos(x + string.len(stack.item.displayName) + 1, y + i - 1)
-            term.write(stack.item.count)
-
-        end
-        -- Reset colors
-        term.setBackgroundColor(colors.black)
-        term.setTextColor(colors.white)
+        local width, height = term.getSize()
+        selectable_list.draw(x, y, height - y, selected_index, #stacks, function (i) return '[' .. i .. ']' end)
     end
 
     local function draw_table(x, y, table)
@@ -128,9 +121,7 @@ local function create(states, storage_handler, selected_name)
 
     local function draw_selected_stack(x, y)
         -- Render item meta information
-        local item = stacks[selected_stack].item
-        draw_table(x, y, item)
-
+        draw_table(x, y, stacks[selected_stack].item)
     end
 
     local function draw()
@@ -141,18 +132,17 @@ local function create(states, storage_handler, selected_name)
             term.setBackgroundColor(colors.white)
             term.setTextColor(colors.black)
         end
-        term.setCursorPos(string.len(selected_name) + 4, 2)
-        term.write(bundle_count)
+        term.setCursorPos(2, 4)
+        term.write(bundle_count .. '/' .. total_count)
 
         -- Reset colors
         term.setBackgroundColor(colors.black)
         term.setTextColor(colors.white)
 
-        draw_stacks(2, 4)
+        draw_stacks(2, 6)
         
         if focus == FOCUS_STACKS then
-            local width, height = term.getSize()
-            draw_selected_stack(width / 2, 2)
+            draw_selected_stack(8, 4)
         end
     end
 

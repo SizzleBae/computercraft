@@ -1,13 +1,13 @@
 local queue = require '../../common/queue'
 
 -- Constants
-local INPUT_SIDE = "top"
+-- local INPUT_SIDE = "top"
 local STORAGE_SIDE = "bottom"
 local SEND_SIDE = "left"
-local CONTINUE_SIDE = "front"
+-- local CONTINUE_SIDE = "front"
 
 local INVENTORIES = {
-    [INPUT_SIDE] = peripheral.wrap(INPUT_SIDE),
+    -- [INPUT_SIDE] = peripheral.wrap(INPUT_SIDE),
     [STORAGE_SIDE] = peripheral.wrap(STORAGE_SIDE)
 }
 
@@ -34,9 +34,10 @@ local function refresh_stored_items()
     rednet.broadcast(stored_items)
 end
 
--- Refreshes metadata in storage slot
+-- Refreshes metadata in storage slot, then returns it
 local function refresh_stored_slot(slot)
     stored_items[slot] = INVENTORIES[STORAGE_SIDE].getItemMeta(slot)
+    return stored_items[slot]
 end
 
 local function send_stack(slot, count)
@@ -70,10 +71,18 @@ local function handle_input_items()
 
             if input_item ~= nil then
                 if turtle.dropDown() then
+                    local check_empty_slots = true
                     -- If items were stored, update storage metadata
                     for stored_slot = 1, INVENTORIES[STORAGE_SIDE].size() do
                         local stored_item = stored_items[stored_slot]
-                        if stored_item == nil or stored_item.name == input_item.name then
+                        if stored_item == nil then
+                            if check_empty_slots then
+                                if refresh_stored_slot(stored_slot) == nil then
+                                    -- An empty slot was not filled, no need to check additional empty slots
+                                    check_empty_slots = false
+                                end
+                            end
+                        elseif stored_item.name == input_item.name then
                             refresh_stored_slot(stored_slot)
                         end
                     end

@@ -1,3 +1,5 @@
+local selectable_list = require 'gui.selectable_list'
+
 local function create(states, storage_handler)
     local search_input = ""
 
@@ -61,22 +63,8 @@ local function create(states, storage_handler)
     end
 
     local function draw_suggestions(x, y)
-        term.setCursorPos(x, y)
-        for i, suggestion in pairs(suggestions) do
-            -- Draw selected suggetion with white background
-            if i == selected_suggestion then
-                term.setBackgroundColor(colors.white)
-                term.setTextColor(colors.black)
-            else
-                term.setBackgroundColor(colors.black)
-                term.setTextColor(colors.white)
-            end
-            term.write(suggestion)
-            term.setCursorPos(x, y + i)
-        end
-        -- Reset colors
-        term.setBackgroundColor(colors.black)
-        term.setTextColor(colors.white)
+        local width, height = term.getSize()
+        selectable_list.draw(x, y, height - y, selected_suggestion, #suggestions, function (i) return suggestions[i] end)
     end
 
     local function draw()
