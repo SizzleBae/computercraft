@@ -81,9 +81,7 @@ function getRequireAbsolutePath(localReqiureStr, luaPath) {
 }
 
 app.get('/api/lua-local/*', (req, res) => {
-    if (!directoryValid(publicDir, req.headers["origin-path"])) {
-        return res.status(400).send("Invalid origin directory path.");
-    }
+    console.log(`GET lua-local: ${req.params[0]}`)
 
     const targetFile = getFile(publicDir, req.params[0]);
     if (!targetFile) {
@@ -93,29 +91,9 @@ app.get('/api/lua-local/*', (req, res) => {
     const luaRaw = targetFile.toString('utf-8');
 
     // Replace all require paths with paths relative to the origin directory
-    const originPath = req.headers["origin-path"].split('/');
     const luaLocal = luaRaw.replace(localRequireExp, (requireStr) => {
         const requireAbsolutePath = getRequireAbsolutePath(requireStr, req.params[0]).split('/');
-
-        // Identify common directories, store the index of the furthest common directory
-        let commonIndex = 0;
-        for (const [i, segment] of originPath.entries()) {
-            if (i >= requireAbsolutePath.length || segment != requireAbsolutePath[i]) {
-                break;
-            }
-
-            commonIndex++;
-        }
-
-        const finalPath = [];
-        // Climb up until the common directory is reached
-        const climbCount = originPath.length - commonIndex;
-        finalPath.push(...Array(climbCount).fill('..'));
-
-        // Append the remaining path to the required file
-        finalPath.push(...requireAbsolutePath.slice(commonIndex));
-
-        return `require '${finalPath.join('/')}'`;
+        return `require '.${requireAbsolutePath.join('.')}'`;
     })
 
     return res.status(200).send(luaLocal);
@@ -153,6 +131,8 @@ function getDependenciesRecursively(luaPath, result) {
 }
 
 app.get('/api/lua-dependencies/*', (req, res) => {
+    console.log(`GET lua-dependencies: ${req.params[0]}`)
+
     const result = {};
     getDependenciesRecursively(req.params[0], result);
 
