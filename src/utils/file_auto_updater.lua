@@ -6,7 +6,6 @@ local server_address = args[2]
 if server_dir == nil then server_dir = "" end
 if server_address == nil then server_address = "http://85.164.111.235:8000" end
 
--- Get the github api program
 if fs.exists("file_client") then fs.delete("file_client") end
 shell.run("pastebin", "get", "YLh9qWnT", "file_client")
 
