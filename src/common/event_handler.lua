@@ -22,7 +22,7 @@ end
 function EventHandler:off(event_name, handler)
     if self.handlers[event_name] == nil then self.handlers[event_name] = {} end
 
-    ArrayUtils.fast_remove(self.handlers[event_name], function (element)
+    ArrayUtils:fast_remove(self.handlers[event_name], function (element)
         return element ~= handler
     end)
 end
