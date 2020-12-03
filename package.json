@@ -1,0 +1,16 @@
+{
+  "name": "computercraft",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tstl",
+    "dev": "tstl --watch"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "lua-types": "^2.8.0",
+    "typescript-to-lua": "^0.36.0"
+  }
+}

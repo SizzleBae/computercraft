@@ -18,7 +18,7 @@ local dependencies = split_string(dependencies_string, ',')
 
 for i, path in pairs(dependencies) do
     print("Retrieving " .. path .. "...")
-    local file_string = http.get(server_address .. "/api/lua-local/" .. path).readAll()
+    local file_string = http.get(server_address .. "/api/file/" .. path).readAll()
 
     local file = fs.open(path, "w")
     file.write(file_string)

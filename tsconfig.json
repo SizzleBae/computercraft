@@ -1,0 +1,25 @@
+{
+    "compilerOptions": {
+        "target": "esnext",
+        "lib": [
+            "esnext"
+        ],
+        "moduleResolution": "node",
+        "types": [
+            "lua-types/5.1"
+        ],
+        "strict": true,
+        "rootDir": "src",
+        "outDir": "lua-generated"
+    },
+    "include": [
+        "src",
+        "declarations"
+    ],
+    "tstl": {
+        "luaTarget": "5.1",
+        // "luaBundle": "lua-generated/bundle.lua",
+        // "luaBundleEntry": "src/main.ts",
+        // "luaLibImport": "inline"
+    }
+}
