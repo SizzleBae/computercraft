@@ -4,7 +4,6 @@ import path from "path"
 
 const localRequireExp = new RegExp(/require[\(\s]["'](.*?)['"]\)/g);
 const publicDir = "../lua-generated/";
-const exclude = "lualib_bundle";
 
 const app = express();
 const port = 8000;
@@ -68,6 +67,8 @@ function directoryValid(...paths) {
 }
 
 app.get('/api/file/*', (req, res) => {
+    console.log(`GET file: ${req.params[0]}`)
+
     const targetFile = getFile(publicDir, req.params[0]);
     if (!targetFile) {
         return res.status(400).send("Invalid file path.");
@@ -76,38 +77,38 @@ app.get('/api/file/*', (req, res) => {
 })
 
 // Returns an array representing the path required from a lua script
-function getRequireAbsolutePath(localReqiureStr, luaPath) {
+function getRequirePath(localReqiureStr) {
     const requirePath = localReqiureStr.match(/["'](.*?)["']/)[0].slice(1, -1);
-    return path.join(luaPath, "../", requirePath).replace(/\\/g, '/');
+    return requirePath.replace(/\./g, '/');
 }
 
-app.get('/api/lua-local/*', (req, res) => {
-    console.log(`GET lua-local: ${req.params[0]}`)
+// app.get('/api/lua-local/*', (req, res) => {
+//     console.log(`GET lua-local: ${req.params[0]}`)
 
-    const targetFile = getFile(publicDir, req.params[0]);
-    if (!targetFile) {
-        return res.status(400).send("Invalid target file path.");
-    }
+//     const targetFile = getFile(publicDir, req.params[0]);
+//     if (!targetFile) {
+//         return res.status(400).send("Invalid target file path.");
+//     }
 
-    const luaRaw = targetFile.toString('utf-8');
+//     const luaRaw = targetFile.toString('utf-8');
 
-    // Replace all require paths with paths relative to the origin directory
-    const luaLocal = luaRaw.replace(localRequireExp, (requireStr) => {
-        const requireAbsolutePath = getRequireAbsolutePath(requireStr, req.params[0]).split(/[./]/);
-        return `require '.${requireAbsolutePath.join('.')}'`;
-    })
+//     // Replace all require paths with paths relative to the origin directory
+//     // const luaLocal = luaRaw.replace(localRequireExp, (requireStr) => {
+//     //     const requireAbsolutePath = getRequirePath(requireStr).split('/');
+//     //     return `require '.${requireAbsolutePath.join('.')}'`;
+//     // })
 
-    return res.status(200).send(luaLocal);
-})
+//     return res.status(200).send(luaRaw);
+// })
 
 function getDependenciesRecursively(luaPath, result) {
     if (!result.dependencies) {
         result.dependencies = new Set();
     }
 
-    if (luaPath.includes(exclude)) {
-        return;
-    }
+    // if (luaPath.includes(exclude)) {
+    //     return;
+    // }
 
     // Avoid dependency loops
     if (result.dependencies.has(luaPath)) {
@@ -131,7 +132,7 @@ function getDependenciesRecursively(luaPath, result) {
     }
 
     for (const requireStr of requires) {
-        const requireAbsolutePath = getRequireAbsolutePath(requireStr, luaPath).replace('.', '/') + '.lua';
+        const requireAbsolutePath = getRequirePath(requireStr) + '.lua';
         getDependenciesRecursively(requireAbsolutePath, result);
     }
 }
@@ -141,7 +142,6 @@ app.get('/api/lua-dependencies/*', (req, res) => {
 
     const result = {};
     getDependenciesRecursively(req.params[0], result);
-    result.dependencies.add("lualib_bundle.lua")
 
     if (result.error) {
         return res.status(400).send(result.error);
